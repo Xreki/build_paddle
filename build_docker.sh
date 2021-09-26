@@ -27,11 +27,11 @@ function cmake_gen() {
           -DTHIRD_PARTY_PATH=$THIRD_PARTY_PATH \
           -DCMAKE_BUILD_TYPE=Release \
           -DWITH_GPU=${WITH_GPU} \
-          -DCUDA_ARCH_NAME=Auto \
+          -DCUDA_ARCH_NAME=Volta \
           -DON_INFER=OFF \
           -DWITH_DISTRIBUTE=ON \
           -DWITH_DGC=ON \
-          -DWITH_MKL=OFF \
+          -DWITH_MKL=ON \
           -DWITH_AVX=ON \
           -DWITH_TESTING=ON \
           -DWITH_INFERENCE_API_TEST=ON \
@@ -76,9 +76,9 @@ function cmake_gen() {
           -DTHIRD_PARTY_PATH=$THIRD_PARTY_PATH \
           -DCMAKE_BUILD_TYPE=Release \
           -DWITH_GPU=${WITH_GPU} \
-          -DCUDA_ARCH_NAME=Auto \
+          -DCUDA_ARCH_NAME=Volta \
           -DON_INFER=OFF \
-          -DWITH_DISTRIBUTE=OFF \
+          -DWITH_DISTRIBUTE=ON \
           -DWITH_DGC=OFF \
           -DWITH_CRYPTO=ON \
           -DWITH_MKL=OFF \
@@ -89,7 +89,6 @@ function cmake_gen() {
           -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} \
           -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR} \
           -DPYTHON_LIBRARIES=${PYTHON_LIBRARIES} \
-          -DWITH_TESTING=${WITH_TESTING} \
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
           -DCMAKE_VERBOSE_MAKEFILE=OFF \
           -DPY_VERSION=${PY_VERSION} \
