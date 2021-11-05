@@ -2,19 +2,21 @@
 
 set -xe
 
-#export XREKI_IMAGE_NAME=paddlepaddle/paddle
-#export XREKI_IMAGE_TAG=latest-gpu-cuda9.0-cudnn7-dev
-#export DOCKER_SUFFIX=_dev_cuda90
-
-cuda_version=10.1
+cuda_version=10.2
 if [ ${cuda_version} == "10.1" ]; then
   #export XREKI_IMAGE_NAME=paddlepaddle/paddle_manylinux_devel
   #export XREKI_IMAGE_TAG=cuda${cuda_version}-cudnn7
   export XREKI_IMAGE_NAME=paddlepaddle/paddle
   export XREKI_IMAGE_TAG=latest-dev-cuda${cuda_version}-cudnn7-gcc82
-elif [ ${cuda_version} == "11.0" ]; then
-  export XREKI_IMAGE_NAME=tianshuo78520a/paddle_manylinux_devel
-  export XREKI_IMAGE_TAG=cuda${cuda_version}-cudnn8
+elif [ ${cuda_version} == "10.2" ]; then
+  export XREKI_IMAGE_NAME=registry.baidubce.com/paddlepaddle/paddle
+  export XREKI_IMAGE_TAG=latest-gpu-cuda10.2-cudnn7-dev
+elif [ ${cuda_version} == "11.2" ]; then
+  export XREKI_IMAGE_NAME=paddlepaddle/paddle
+  export XREKI_IMAGE_TAG=latest-dev-cuda11.2-cudnn8-gcc82
+elif [ ${cuda_version} == "11.4" ]; then
+  export XREKI_IMAGE_NAME=paddlepaddle/paddle
+  export XREKI_IMAGE_TAG=latest-dev-cuda11.4.1-cudnn8-gcc82
 fi
 
 export DOCKER_SUFFIX=_dev_cuda${cuda_version}

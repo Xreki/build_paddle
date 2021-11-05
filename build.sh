@@ -15,6 +15,8 @@ function parse_version() {
   export PADDLE_VERSION=${latest_tag}
 }
 
+export runtime_include_dir=${THIRD_PARTY_PATH}/CINN/src/external_cinn-build/dist/cinn/include/cinn/runtime/cuda
+
 function cmake_gen() {
   export CC=gcc
   export CXX=g++
@@ -28,6 +30,7 @@ function cmake_gen() {
           -DCMAKE_BUILD_TYPE=Release \
           -DWITH_GPU=${WITH_GPU} \
           -DCUDA_ARCH_NAME=Volta \
+          -DWITH_CINN=ON \
           -DON_INFER=OFF \
           -DWITH_DISTRIBUTE=ON \
           -DWITH_DGC=ON \
@@ -119,6 +122,27 @@ EOF
   cd ${PROJ_ROOT}
 }
 
+function run_unittest() {
+  export CUDA_VISIBLE_DEVICES="2"
+  export PYTHONPATH=${BUILD_ROOT}/python:${PYTHONPATH}
+  export FLAGS_fraction_of_gpu_memory_to_use=0.1
+  #export FLAGS_benchmark=1
+
+  cd $BUILD_ROOT
+  #export GLOG_vmodule=fusion_group_pass=4
+  export GLOG_vmodule=operator=4
+  #export GLOG_vmodule=pass_builder=1
+  #export GLOG_vmodule=build_strategy=1
+  #export GLOG_v=4
+  #UNIT_TEST_NAME=test_parallel_executor_run_cinn
+  #ctest -V -R ${UNIT_TEST_NAME}
+  
+  export GLOG_vmodule=cinn_launch_op=4
+  export GLOG_vmodule=graph_compiler=4
+  export FLAGS_allow_cinn_ops="conv2d"
+  python ${BUILD_ROOT}/python/paddle/fluid/tests/unittests/test_resnet50_with_cinn.py
+}
+
 function main() {
   local CMD=$1
   source $PROJ_ROOT/env.sh
@@ -136,10 +160,8 @@ function main() {
     inference_lib)
       inference_lib
       ;;
-    run)
-      sh $PROJ_ROOT/run_docker.sh
-#      cd $BUILD_ROOT
-#      sh $PROJ_ROOT/run_test.sh
+    ut)
+      run_unittest
       ;;
     version)
       parse_version
