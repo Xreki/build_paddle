@@ -3,6 +3,8 @@
 PATH=/usr/local/ssl:${GOROOT}/bin:${GOPATH}/bin:${PATH}
 LIBRARY_PATH=/usr/local/ssl/lib:$LIBRARY_PATH
 
+PY_VERSION=3.8
+
 NVCC=`which nvcc`
 if [ ${NVCC} != "" ]; then
   NVCC_VERSION=`nvcc --version | tail -n 2 | grep "V[0-9][0-9]*\.[0-9]" -o | uniq`
@@ -11,9 +13,18 @@ if [ ${NVCC} != "" ]; then
 fi
 GCC_VERSION=`gcc --version | head -n 1 | grep "[0-9]\.[0-9]\.[0-9]" -o | uniq`
 SUFFIX=${SUFFIX}"_gcc${GCC_VERSION}"
-PY_VERSION=3.8
 if [ "${PY_VERSION}" != "" ]; then
   SUFFIX=${SUFFIX}"_py${PY_VERSION}"
+fi
+
+if [ "${NVCC_VERSION}" = "11.2" ]; then
+  WITH_CINN=ON
+else
+  WITH_CINN=OFF
+fi
+
+if [ "${WITH_CINN}" = "ON" ]; then
+  SUFFIX=${SUFFIX}_cinn
 fi
 
 BUILD_ROOT=${PROJ_ROOT}/build$SUFFIX
