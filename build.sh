@@ -30,10 +30,12 @@ function cmake_gen() {
           -DTHIRD_PARTY_PATH=$THIRD_PARTY_PATH \
           -DCMAKE_BUILD_TYPE=Release \
           -DWITH_GPU=${WITH_GPU} \
-          -DCUDA_ARCH_NAME=Volta \
+          -DCUDA_ARCH_NAME=Auto \
+          -DWITH_CUDNN_FRONTEND=OFF \
           -DWITH_CINN=${WITH_CINN} \
           -DON_INFER=OFF \
           -DWITH_DISTRIBUTE=ON \
+          -DWITH_MPI=OFF \
           -DWITH_DGC=ON \
           -DWITH_MKL=ON \
           -DWITH_AVX=ON \
@@ -44,43 +46,22 @@ function cmake_gen() {
           -DPY_VERSION=${PY_VERSION} \
           $SOURCES_ROOT
   else
-    if [ "$PYTHON_ABI" == "cp27-cp27m" ]; then
-      PYTHON_EXECUTABLE=/opt/python/${PYTHON_ABI}/bin/python
-      PYTHON_INCLUDE_DIR=/opt/python/${PYTHON_ABI}/include/python2.7
-      PYTHON_LIBRARIES=/opt/python/${PYTHON_ABI}/lib/libpython2.7.so
-      pip uninstall -y protobuf
-      pip install -r ${SOURCES_ROOT}/python/requirements.txt
-    elif [ "$PYTHON_ABI" == "cp27-cp27mu" ]; then
-      PYTHON_EXECUTABLE=/opt/python/cp27-cp27mu/bin/python
-      PYTHON_INCLUDE_DIR=/opt/python/cp27-cp27mu/include/python2.7
-      PYTHON_LIBRARIES=/opt/python/${PYTHON_ABI}/lib/libpython2.7.so
-      pip uninstall -y protobuf
-      pip install -r ${SOURCES_ROOT}/python/requirements.txt
-    elif [ "$PYTHON_ABI" == "cp35-cp35m" ]; then
-      PYTHON_EXECUTABLE=/opt/python/${PYTHON_ABI}/bin/python3
-      PYTHON_INCLUDE_DIR=/opt/python/${PYTHON_ABI}/include/python3.5m
-      PYTHON_LIBRARIES=/opt/python/${PYTHON_ABI}/lib/libpython3.so
-      pip3.5 uninstall -y protobuf
-      pip3.5 install -r ${SOURCES_ROOT}/python/requirements.txt
-    elif [ "$PYTHON_ABI" == "cp36-cp36m" ]; then
-      PYTHON_EXECUTABLE=/opt/python/${PYTHON_ABI}/bin/python3
-      PYTHON_INCLUDE_DIR=/opt/python/${PYTHON_ABI}/include/python3.6m
-      PYTHON_LIBRARIES=/opt/python/${PYTHON_ABI}/lib/libpython3.so
-      pip3.6 uninstall -y protobuf
-      pip3.6 install -r ${SOURCES_ROOT}/python/requirements.txt
-    elif [ "$PYTHON_ABI" == "cp37-cp37m" ]; then
+    if [ "$PYTHON_ABI" == "cp37-cp37m" ]; then
       PYTHON_EXECUTABLE=/opt/python/${PYTHON_ABI}/bin/python3.7
       PYTHON_INCLUDE_DIR=/opt/python/${PYTHON_ABI}/include/python3.7m
       PYTHON_LIBRARIES=/opt/python/${PYTHON_ABI}/lib/libpython3.so
       pip3.7 uninstall -y protobuf
       pip3.7 install -r ${SOURCES_ROOT}/python/requirements.txt
+    else
+      echo "Python${PY_VERSION} is not supported!"
+      exit
     fi
 
     cmake -DCMAKE_INSTALL_PREFIX=$DEST_ROOT \
           -DTHIRD_PARTY_PATH=$THIRD_PARTY_PATH \
           -DCMAKE_BUILD_TYPE=Release \
           -DWITH_GPU=${WITH_GPU} \
-          -DCUDA_ARCH_NAME=Volta \
+          -DCUDA_ARCH_NAME=Auto \
           -DON_INFER=OFF \
           -DWITH_DISTRIBUTE=ON \
           -DWITH_DGC=OFF \
@@ -130,20 +111,23 @@ function run_unittest() {
   #export FLAGS_benchmark=1
 
   cd $BUILD_ROOT
-  #export GLOG_vmodule=fusion_group_pass=4
-#  export GLOG_vmodule=operator=4
-  #export GLOG_vmodule=build_strategy=1
+  #export GLOG_vmodule=conv_cudnn_helper=4
   #export GLOG_v=4
   #UNIT_TEST_NAME=test_parallel_executor_run_cinn
-  #ctest -V -R ${UNIT_TEST_NAME}
+  UNIT_TEST_NAME=test_nan_inf
+  ctest -V -R ${UNIT_TEST_NAME}
+  #python3.9 ${BUILD_ROOT}/python/paddle/fluid/tests/unittests/check_nan_inf_base.py
+  MY_PYTHON_BIN=`which python${PY_VERSION}`
+  UNIT_TEST_SCRIPT=`find -name ${UNIT_TEST_NAME}.py` 
+  #${MY_PYTHON_BIN} -u ${UNIT_TEST_SCRIPT}
   
 #  export GLOG_vmodule=cinn_launch_op=4
 #  export GLOG_vmodule=build_cinn_pass=4
 #  export GLOG_vmodule=graph_compiler=4
-  export FLAGS_allow_cinn_ops="batch_norm;batch_norm_grad;elementwise_add;elementwise_add_grad;relu;relu_grad"
-  export GLOG_vmodule=fetch_feed=4,cuda_util=4
+  #export FLAGS_allow_cinn_ops="batch_norm;batch_norm_grad;elementwise_add;elementwise_add_grad;relu;relu_grad"
+  #export GLOG_vmodule=fetch_feed=4,cuda_util=4
 #  export FLAGS_allow_cinn_ops="conv2d;conv2d_grad;batch_norm;batch_norm_grad;elementwise_add;elementwise_add_grad;relu;relu_grad;sum"
-  python ${BUILD_ROOT}/python/paddle/fluid/tests/unittests/test_resnet50_with_cinn.py
+  #python ${BUILD_ROOT}/python/paddle/fluid/tests/unittests/test_resnet50_with_cinn.py
 }
 
 function main() {

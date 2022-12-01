@@ -3,7 +3,16 @@
 PATH=/usr/local/ssl:${GOROOT}/bin:${GOPATH}/bin:${PATH}
 LIBRARY_PATH=/usr/local/ssl/lib:$LIBRARY_PATH
 
-PY_VERSION=3.8
+#### Set default sources root
+if [ -z $PROJ_ROOT ]; then
+  PROJ_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")" && pwd )"
+fi
+if [ -z $SOURCES_ROOT ]; then
+  SOURCES_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/.." && pwd )"
+fi
+
+#### Set suffix of build directory
+PY_VERSION=3.9
 
 NVCC=`which nvcc`
 if [ ${NVCC} != "" ]; then
@@ -22,19 +31,24 @@ if [ "${NVCC_VERSION}" = "11.2" ]; then
 else
   WITH_CINN=OFF
 fi
+WITH_CINN=OFF
 
 if [ "${WITH_CINN}" = "ON" ]; then
   SUFFIX=${SUFFIX}_cinn
 fi
 
+cd ${SOURCES_ROOT}
+GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+cd ${PROJ_ROOT}
+echo "GIT_BRANCH: ${GIT_BRANCH}"
+if [[ $GIT_BRANCH =~ "release/" ]]; then
+  GIT_BRANCH=`echo $GIT_BRANCH | sed 's/release\//r/'`
+  SUFFIX=${SUFFIX}"_$GIT_BRANCH"
+fi
+
 BUILD_ROOT=${PROJ_ROOT}/build$SUFFIX
 DEST_ROOT=$PROJ_ROOT/dist$SUFFIX
 THIRD_PARTY_PATH=$PROJ_ROOT/third_party$SUFFIX
-
-#### Set default sources root
-if [ -z $SOURCES_ROOT ]; then
-  SOURCES_ROOT=$PROJ_ROOT/..
-fi
 
 echo "PROJ_ROOT: ${PROJ_ROOT}"
 echo "SOURCES_ROOT: ${SOURCES_ROOT}"
@@ -50,14 +64,11 @@ echo "OSNAME: ${OSNAME}"
 function set_python_env() {
   if [ "${OSNAME}" == "CentOS" ];
   then
-    if [ "${PY_VERSION}" == "3.5" ]; then
-      export PYTHON_ABI="cp35-cp35m"
-    elif  [ "${PY_VERSION}" == "3.6" ]; then
-      export PYTHON_ABI="cp36-cp36m"
-    elif  [ "${PY_VERSION}" == "3.7" ]; then
+    if  [ "${PY_VERSION}" == "3.7" ]; then
       export PYTHON_ABI="cp37-cp37m"
     else
-      export PYTHON_ABI="cp27-cp27mu"
+      echo "Python${PY_VERSION} is not supported!"
+      exit
     fi
 
     echo "using python abi: $1"
